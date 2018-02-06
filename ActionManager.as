@@ -15,6 +15,7 @@
 		public function ActionManager() {
 			this.addEventListener(Event.ADDED_TO_STAGE, onStage);
 			this.addEventListener(Event.REMOVED_FROM_STAGE, offStage);
+			update();
 		}
 		
 		private function onStage(e:Event):void {
@@ -33,8 +34,13 @@
 		static public function setMute(value:Boolean):void {
 			var so:SharedObject = SharedObject.getLocal("yubnub");
 			so.setProperty(MUTE, value);
-			SoundMixer.soundTransform = new SoundTransform(value?0:1);
+			update();
 			MenuButton.checkAllSelected();			
+		}
+		
+		static private function update():void {
+			var so:SharedObject = SharedObject.getLocal("yubnub");
+			SoundMixer.soundTransform = new SoundTransform(so.data[MUTE] ? 0 : 1);
 		}
 		
 		static public function active(action:String):Boolean {
