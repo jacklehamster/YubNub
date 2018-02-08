@@ -23,11 +23,15 @@
 			if (Math.abs(xNum) > 400 || Math.abs(yNum) > 200) {
 				xNum = (Math.random()-.5)*200;
 				yNum = (Math.random()-.5)*100;
-				scale = 0.02 * Math.random();
+				scale = 0.01 * Math.random();
 			}
 			x = xNum;
 			y = yNum;
 			scaleX = scaleY = scale;
+		}
+		
+		public function freeze():void {
+			removeEventListener(Event.ENTER_FRAME, onFrame);			
 		}
 		
 		private function onStage(e:Event):void {

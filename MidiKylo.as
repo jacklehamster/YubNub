@@ -9,19 +9,21 @@
 	
 	
 	public class MidiKylo extends ForceElement {
-		private var MAXY = 400;
 		private var currentState:String;
 		private var myStage:Stage;
 		private var keyboard:Object = {};
 		private var locked:Boolean = false;
 		private var momentum:Number = 0;
 		
-		private var posX:Number = 0, posY:Number = 0;
-		private var movY:Number = 0;
 		private var charge:int = 0;
 		
+		private var noPower:Object = {
+			jump: false,
+			push: false
+		};
 		private var forcePower:Object = {
-			jump: true
+			jump: false,
+			push: true
 		};
 		
 		private var temp:MovieClip;
@@ -109,7 +111,8 @@
 			return currentState==="crouching" 
 				|| currentState==="standingup" 
 				|| currentState==="startjumping"
-				|| currentState==="startforcejumping";
+				|| currentState==="startforcejumping"
+				|| currentState==="forcepushing";
 		}
 		
 		private function crouched():Boolean {
@@ -117,7 +120,7 @@
 		}
 		
 		private function inStandPosition():Boolean {
-			return currentState==="standing" || currentState==="running";
+			return currentState==="standing" || currentState==="running" || currentState==="forcepushing";
 		}
 		
 		private function airborn():Boolean {
@@ -125,7 +128,8 @@
 		}
 		
 		private function move(dx:Number, dy:Number, useForce:Boolean):void {
-			if(useForce && forcePower.jump && !airborn()) {
+			var force:Object = useForce ? forcePower: noPower;
+			if(force.jump && !airborn()) {
 				setState("startforcejumping");
 				return;
 			} else if(dy>0 && inStandPosition()) {
@@ -136,6 +140,11 @@
 				return;
 			} else if(dy < 0 && !airborn()) {
 				setState("startjumping");
+				return;
+			} else if(force.push && currentState==="forceusing") {
+				return;
+			} else if(force.push && !airborn() && currentState!=="forcepushing") {
+				setState("forcepushing");
 				return;
 			}
 			
@@ -158,7 +167,7 @@
 					return;
 				} else {
 					var gravity:Number = 1.1;
-					if (useForce && currentState==="forcejumping") {
+					if (force.jump && currentState==="forcejumping") {
 						gravity = .8;
 					} else if (dy < 0 && currentState==="jumping") {
 						gravity = .7;
@@ -250,6 +259,9 @@
 				case "startforcejumping":
 					setState("forcejumping");
 					movY = -Math.min(power*1.2, 22);
+					break;
+				case "forcepushing":
+					setState("forceusing");
 					break;
 			}
 		}

@@ -23,7 +23,12 @@
 			color = "#"+(tf.textColor.toString(16));
 		}
 		
-		public function startDialog(array:Array, autoPlayDelay:int = 0, speed:int = 30):void {
+		public function startDialog(
+				array:Array, 
+				autoPlayDelay:int = 0,
+				speed:int = 30
+		):void {
+			this.index = -1;
 			this.dialog = array;
 			this.autoPlayDelay = autoPlayDelay;
 			this.speed = speed;
@@ -64,8 +69,10 @@
 						thumbnail.icon.gotoAndStop(1);
 					}
 					if(autoPlayDelay) {
-						setTimeout(nextMessage, autoPlayDelay);
-					} else if(stage) {						
+						if (autoPlayDelay > 0) {
+							setTimeout(nextMessage, autoPlayDelay);
+						}
+					} else if(stage) {
 						stage.addEventListener(KeyboardEvent.KEY_UP,nextMessage);							
 					}
 				}

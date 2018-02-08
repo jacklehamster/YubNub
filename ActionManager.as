@@ -5,12 +5,15 @@
 	import flash.events.Event;
 	import flash.media.SoundTransform;
 	import flash.media.SoundMixer;
+	import flash.media.Sound;
 	
 	
 	public class ActionManager extends MovieClip {
-		private static const INTRO_SEEN:String = "introSeen";
+		private static const INTRO_SEEN:String = "intro_seen";
 		private static const MUTE:String = "mute";
 		private static var instance:ActionManager;
+		static private var lukeTheme:Sound;
+		static private var channel;
 		
 		public function ActionManager() {
 			this.addEventListener(Event.ADDED_TO_STAGE, onStage);
@@ -20,10 +23,15 @@
 		
 		private function onStage(e:Event):void {
 			instance = this;
+			lukeTheme = new LukeTheme();
+			SoundMixer.stopAll();
+			channel = lukeTheme.play(0, 100000, new SoundTransform(.25));
 		}
 		
 		private function offStage(e:Event):void {
 			instance = null;
+			channel.stop();
+			channel = null;
 		}
 		
 		static public function seenIntro():void {
@@ -41,18 +49,31 @@
 		static private function update():void {
 			var so:SharedObject = SharedObject.getLocal("yubnub");
 			SoundMixer.soundTransform = new SoundTransform(so.data[MUTE] ? 0 : 1);
+			if(channel) {
+				if(so.data[MUTE]) {
+					channel.stop();
+				} else {
+					channel.play();
+				}				
+			}
 		}
 		
 		static public function active(action:String):Boolean {
 			switch(action) {
-				case "skipIntro":
-					return SharedObject.getLocal("yubnub").data[INTRO_SEEN];
-					break;
 				case "mute":
 					return !SharedObject.getLocal("yubnub").data[MUTE];
 					break;
 				case "unmute":
 					return SharedObject.getLocal("yubnub").data[MUTE];
+					break;
+			}
+			return true;
+		}
+		
+		static public function visible(action:String):Boolean {
+			switch(action) {
+				case "skipIntro":
+					return SharedObject.getLocal("yubnub").data[INTRO_SEEN];
 					break;
 			}
 			return true;
@@ -78,7 +99,7 @@
 						root.gotoAndPlay(1, "Intro");
 						break;
 					case "skipIntro":
-						root.gotoAndPlay(1, "SnokeRoom Decision");
+						root.gotoAndPlay(1, "Decision");
 						break;
 					case "options":
 						root.gotoAndStop("OPTIONS", "Menu");

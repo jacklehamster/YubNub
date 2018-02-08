@@ -92,13 +92,18 @@
 		
 		static public function checkAllSelected():void {
 			for(var i:int = 0; i<instances.length; i++) {
-				instances[i].visible = instances[i].active;
+				instances[i].visible = instances[i].selected
+					|| (instances[i].active && instances[i].isVisible);
 				instances[i].gotoAndStop(instances[i].selected?"SELECTED":"NORMAL");
 			}
 		}
 		
 		private function get active():Boolean {
 			return ActionManager.active(name);
+		}
+		
+		public function get isVisible():Boolean {
+			return ActionManager.visible(name);
 		}
 		
 		private function get selected():Boolean {
