@@ -25,7 +25,7 @@
 		}
 		
 		private function shake():void {
-			var amp:Number= 1;
+			var amp:Number= 10;
 			addEventListener(Event.ENTER_FRAME, function(e:Event):void {
 				rey.x = xOrg+amp*(Math.random()-.5);
 				rey.y = yOrg+amp*(Math.random()-.5);

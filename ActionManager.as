@@ -13,7 +13,7 @@
 		private static const MUTE:String = "mute";
 		private static var instance:ActionManager;
 		static private var lukeTheme:Sound;
-		static private var channel;
+		public var channel;
 		
 		public function ActionManager() {
 			this.addEventListener(Event.ADDED_TO_STAGE, onStage);
@@ -30,8 +30,10 @@
 		
 		private function offStage(e:Event):void {
 			instance = null;
-			channel.stop();
-			channel = null;
+			if(channel) {
+				channel.stop();
+				channel = null;				
+			}
 		}
 		
 		static public function seenIntro():void {
@@ -49,13 +51,6 @@
 		static private function update():void {
 			var so:SharedObject = SharedObject.getLocal("yubnub");
 			SoundMixer.soundTransform = new SoundTransform(so.data[MUTE] ? 0 : 1);
-			if(channel) {
-				if(so.data[MUTE]) {
-					channel.stop();
-				} else {
-					channel.play();
-				}				
-			}
 		}
 		
 		static public function active(action:String):Boolean {

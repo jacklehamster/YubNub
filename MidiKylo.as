@@ -6,14 +6,18 @@
 	import flash.ui.Keyboard;
 	import flash.display.Stage;
 	import flash.utils.setTimeout;
+	import nape.phys.Body;
+	import nape.phys.BodyType;
+	import nape.shape.Polygon;
 	
 	
 	public class MidiKylo extends ForceElement {
 		private var currentState:String;
-		private var myStage:Stage;
 		private var keyboard:Object = {};
 		private var locked:Boolean = false;
 		private var momentum:Number = 0;
+		
+		private var WIDTH:int = 33, HEIGHT:int = 68;
 		
 		private var charge:int = 0;
 		
@@ -31,9 +35,9 @@
 			return temp;
 		}
 		
+		var box:Body;
+		
 		public function MidiKylo() {
-			this.addEventListener(Event.ADDED_TO_STAGE, onStage);
-			this.addEventListener(Event.REMOVED_FROM_STAGE, offStage);
 			stop();
 			kylo.stop();
 			currentState = kylo.currentLabel;
@@ -43,13 +47,18 @@
 			gotoAndStop(value);
 		}
 		
-		private function onStage(e:Event):void {
-			myStage = stage;
+		override protected function onStage(e:Event):void {
+			super.onStage(e);
 			myStage.addEventListener(KeyboardEvent.KEY_DOWN, onKey);			
 			myStage.addEventListener(KeyboardEvent.KEY_UP, onKey);
+			
+			box = new Body(BodyType.DYNAMIC);
+			box.allowRotation = false;
+			box.shapes.add(new Polygon(Polygon.box(WIDTH, HEIGHT)));
+			box.position.setxy(posX, posY);
+			box.space = space;			
+			
 			addEventListener(Event.ENTER_FRAME, onFrame);
-			posX = x;
-			posY = y;
 		}
 		
 		private function handleKeyChange(keyCode:int, value:Boolean):void {
@@ -99,7 +108,9 @@
 				charge ++;
 			}
 			if (canMove()) {
-				move(dx, dy, useForce);				
+				move(dx, dy, useForce);
+				this.box.position.x = posX;
+				this.box.position.y = posY;
 			}
 		}
 		
@@ -127,6 +138,10 @@
 			return currentState==="jumping" || currentState==="forcejumping" || currentState==="falling";
 		}
 		
+		private function getMaxY() {
+			return MAXY - HEIGHT/2;
+		}
+		
 		private function move(dx:Number, dy:Number, useForce:Boolean):void {
 			var force:Object = useForce ? forcePower: noPower;
 			if(force.jump && !airborn()) {
@@ -149,11 +164,11 @@
 			}
 			
 			if (airborn()) {
-				y = posY = Math.min(MAXY, posY + movY);
-				if(posY >= MAXY) {
+				y = posY = Math.min(getMaxY(), posY + movY);
+				if(posY >= getMaxY()) {
 					var delay = Math.abs(movY*5);
 					movY = 0;
-					y = posY = MAXY;
+					y = posY = getMaxY();
 					momentum = 0;
 					if(delay > 30) {
 						locked = true;
@@ -266,10 +281,12 @@
 			}
 		}
 		
-		private function offStage(e:Event):void {
+		override protected function offStage(e:Event):void {
 			myStage.removeEventListener(KeyboardEvent.KEY_UP, onKey);			
 			myStage.removeEventListener(KeyboardEvent.KEY_DOWN, onKey);	
+			space.bodies.remove(this.box);
 			removeEventListener(Event.ENTER_FRAME, onFrame);
+			super.offStage(e);
 		}
 	}
 	
