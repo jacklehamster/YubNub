@@ -9,6 +9,8 @@
 	import nape.phys.Body;
 	import nape.phys.BodyType;
 	import nape.shape.Polygon;
+	import nape.callbacks.CbType;
+	import nape.callbacks.InteractionCallback;
 	
 	
 	public class MidiKylo extends ForceElement {
@@ -16,9 +18,18 @@
 		private var keyboard:Object = {};
 		private var locked:Boolean = false;
 		private var momentum:Number = 0;
+		static private var WIDTH = 33, HEIGHT = 68;
+		private static var cbType:CbType = new CbType();
+		private var previousMovY:Number;
 		
-		private var WIDTH:int = 33, HEIGHT:int = 68;
+		override protected function get boxWidth():Number {
+			return WIDTH;
+		}
 		
+		override protected function get boxHeight():Number {
+			return HEIGHT;
+		}
+
 		private var charge:int = 0;
 		
 		private var noPower:Object = {
@@ -47,18 +58,41 @@
 			gotoAndStop(value);
 		}
 		
+		override protected function initialize(options:Object):void {
+			options.allowRotation = false;
+			options.mass = 1;
+			options.polygon = Polygon.regular(WIDTH/2, HEIGHT/2, 20);
+			super.initialize(options);
+			this.addCollisionCheck(cbType, onCollision);
+		}
+		
+		private function onCollision(forceElement:ForceElement):void {
+			if(forceElement.posY > this.posY) {
+				land(previousMovY);
+			}
+		}
+		
+		private function land(speed:Number):void {
+			var delay = Math.abs(speed*5);
+			movY = 0;
+			momentum = 0;
+			previousMovY = 0;
+			if(delay > 30) {
+				locked = true;
+				setState("crouched");
+				setTimeout(function():void {
+					locked = false;
+				}, delay > 50 ? delay : 10);
+			} else {
+				setState("running");
+			}
+		}
+		
+		
 		override protected function onStage(e:Event):void {
 			super.onStage(e);
 			myStage.addEventListener(KeyboardEvent.KEY_DOWN, onKey);			
 			myStage.addEventListener(KeyboardEvent.KEY_UP, onKey);
-			
-			box = new Body(BodyType.DYNAMIC);
-			box.allowRotation = false;
-			box.shapes.add(new Polygon(Polygon.box(WIDTH, HEIGHT)));
-			box.position.setxy(posX, posY);
-			box.space = space;			
-			
-			addEventListener(Event.ENTER_FRAME, onFrame);
 		}
 		
 		private function handleKeyChange(keyCode:int, value:Boolean):void {
@@ -66,13 +100,15 @@
 				case Keyboard.SPACE:
 					if(value) {
 						charge = 0;
-						onFrame();						
+						updatePosition();
+						refreshDisplay();
 					}
 					break;
 				case Keyboard.UP:
 					if(value) {
 						charge = 0;
-						onFrame();						
+						updatePosition();	
+						refreshDisplay();
 					}
 					break;
 			}
@@ -87,7 +123,7 @@
 			}
 		}
 		
-		private function onFrame(e:Event=null):void {
+		override protected function updatePosition():void {
 			var dx:Number = 0, dy:Number = 0, useForce:Boolean = false;
 			if (keyboard[Keyboard.LEFT]) {
 				dx --;
@@ -109,8 +145,6 @@
 			}
 			if (canMove()) {
 				move(dx, dy, useForce);
-				this.box.position.x = posX;
-				this.box.position.y = posY;
 			}
 		}
 		
@@ -164,34 +198,23 @@
 			}
 			
 			if (airborn()) {
-				y = posY = Math.min(getMaxY(), posY + movY);
 				if(posY >= getMaxY()) {
-					var delay = Math.abs(movY*5);
-					movY = 0;
-					y = posY = getMaxY();
-					momentum = 0;
-					if(delay > 30) {
-						locked = true;
-						setState("crouched");
-						setTimeout(function():void {
-							locked = false;
-						}, delay > 50 ? delay : 10);
-					} else {
-						setState("running");
-					}
+					land(previousMovY);
 					return;
 				} else {
-					var gravity:Number = 1.1;
 					if (force.jump && currentState==="forcejumping") {
 						gravity = .8;
 					} else if (dy < 0 && currentState==="jumping") {
 						gravity = .7;
 					} else if (Math.abs(movY) < 5) {
 						gravity = .5;
+					} else {
+						gravity = 1.1;
 					}
 					
 					
-					movY += gravity;
+					
+					//movY += gravity;
 					if(movY < 6) {
 						if(currentState!=="forcejumping") {
 							setState("jumping");
@@ -200,6 +223,7 @@
 						setState("falling");
 					}
 				}
+				previousMovY = movY;
 			}
 			
 			if (dx !== 0) {
@@ -211,7 +235,8 @@
 					: crouched() 
 					? (this.scaleX * dx < 0 ? 1.5 : 2) : 4;
 				momentum = speed >= 4 ? dx * speed : 0;
-				x = posX = posX + dx * speed;
+				//posX = posX + dx * speed;
+				movX = dx * speed;
 				if(!airborn()) {
 					setState(inStandPosition()
 						?"running"
@@ -230,7 +255,7 @@
 			} else {
 				if(momentum) {
 					momentum *= .8;
-					x = posX = posX + momentum;
+					movX = momentum;
 					if(Math.abs(momentum)<0.1) {
 						momentum = 0;
 					}					
@@ -273,19 +298,26 @@
 					break;
 				case "startforcejumping":
 					setState("forcejumping");
-					movY = -Math.min(power*1.2, 22);
+					movY = -Math.min(power*1.2, 20);
 					break;
 				case "forcepushing":
 					setState("forceusing");
+					if(forcePower.push) {
+						grabObject();
+					}
 					break;
 			}
+		}
+		
+		private function grabObject():void {
+			var dir:int = scaleX<0?-1:1;
+			var elem:ForceElement = ForceElement.findInArea(posX + dir*70, posY, 50);
+			trace(elem, posX, posY, scaleX);
 		}
 		
 		override protected function offStage(e:Event):void {
 			myStage.removeEventListener(KeyboardEvent.KEY_UP, onKey);			
 			myStage.removeEventListener(KeyboardEvent.KEY_DOWN, onKey);	
-			space.bodies.remove(this.box);
-			removeEventListener(Event.ENTER_FRAME, onFrame);
 			super.offStage(e);
 		}
 	}
