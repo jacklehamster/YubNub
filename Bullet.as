@@ -40,7 +40,9 @@
 		}
 		
 		public function endAnimation():void {
-			MovieClip(parent).removeChild(this);			
+			if(parent) {
+				MovieClip(parent).removeChild(this);
+			}
 		}
 	}
 	

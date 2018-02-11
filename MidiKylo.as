@@ -377,7 +377,7 @@
 					break;
 				case "KO":
 					if(parent) {
-						visible = false;
+						MovieClip(parent).removeChild(this);
 						if(SceneHandler.instance) {
 							SceneHandler.instance.restart();
 						}

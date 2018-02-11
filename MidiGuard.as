@@ -31,7 +31,9 @@
 		}
 		
 		public function doneTransition():void {
-			visible = false;
+			if(parent) {
+				MovieClip(parent).removeChild(this);
+			}
 		}
 	}
 	

@@ -30,7 +30,7 @@
 		static private var showDebug:Boolean = false;
 		
 		
-		private var index:int = -1;
+		public var index:int = -1;
 		static private var registry:Array = [];
 		
 		protected var box:Body;
@@ -179,8 +179,6 @@
 			initialize({});
 			index = registry.length;
 			registry.push(this);
-			trace(registry.length, registry[registry.length-1], index);
-			trace(">>>",registry);
 		}
 		
 		private function swapMc(e:KeyboardEvent):void {
@@ -195,8 +193,6 @@
 				registry[index] = registry[registry.length-1];
 				registry[index].index = index;				
 				registry.pop();
-				trace(registry.length, registry[registry.length-1], index);
-				trace("<<<",registry);
 			}
 			index = -1;
 			space.bodies.remove(this.box);
