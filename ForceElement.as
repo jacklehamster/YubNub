@@ -13,6 +13,9 @@
 	import nape.callbacks.InteractionListener;
 	import nape.callbacks.CbEvent;
 	import nape.callbacks.InteractionType;
+	import nape.phys.Material;
+	import flash.events.KeyboardEvent;
+	import flash.ui.Keyboard;
 	
 	public class ForceElement extends MovieClip {
 		protected var MAXY = 410;
@@ -23,20 +26,64 @@
 		static private var debug:BitmapDebug;
 		static private var mc:MovieClip;
 		static private var defaultCbType:CbType;
+		static private var defaultMaterial:Material = new Material();
+		static private var showDebug:Boolean = false;
+		
 		
 		private var index:int = -1;
-		static private var registry:Vector.<ForceElement> = new Vector.<ForceElement>();
+		static private var registry:Array = [];
 		
-		private var box:Body;
+		protected var box:Body;
+		protected var mainBody:Body;
+		protected var bodySmall:Body;
 		
-		protected function initialize(options:Object):void {
-			box = new Body(BodyType.DYNAMIC);
+		protected function swapSmall():void {
+			if(box === mainBody) {
+				var b:Body = bodySmall;
+				b.position.set(box.position);
+				b.velocity.set(box.velocity);
+				b.force.set(box.force);
+				b.rotation = box.rotation;
+				b.angularVel = box.angularVel;
+				b.kinAngVel = box.kinAngVel;
+				b.kinematicVel.set(box.kinematicVel);
+				space.bodies.remove(box);
+				space.bodies.add(b);
+				box = b;
+			}
+		}
+		
+		protected function swapLarge():void {
+			if(box === bodySmall) {
+				var b:Body = mainBody;
+				b.position.set(box.position);
+				b.velocity.set(box.velocity);
+				b.force.set(box.force);
+				b.rotation = box.rotation;
+				b.angularVel = box.angularVel;
+				b.kinAngVel = box.kinAngVel;
+				b.kinematicVel.set(box.kinematicVel);
+				space.bodies.remove(box);
+				space.bodies.add(b);
+				box = b;
+			}
+		}
+		
+		protected function getBodyType():BodyType {
+			return BodyType.DYNAMIC;
+		}
+		
+		protected function getMaterial():Material {
+			return defaultMaterial;
+		}
+		
+		private function initBody(box:Body, polygon:Polygon, options:Object):void {
 			box.userData.element = this;
-			posX = x;
-			posY = y;
-			box.shapes.add(new Polygon(options.polygon || Polygon.box(boxWidth, boxHeight)));
+			box.shapes.add(polygon || new Polygon(
+				Polygon.box(boxWidth, boxHeight),
+				getMaterial()
+			));			
 			box.cbTypes.add(defaultCbType);
-			box.space = space;
 			for(var i in options) {
 				switch(i) {
 					case "mass":
@@ -46,8 +93,20 @@
 				}
 			}
 		}
+				
+		protected function initialize(options:Object):void {
+			box = mainBody = new Body(getBodyType());
+			initBody(box, options.polygon, options);
+			posX = x;
+			posY = y;
+			box.space = space;
+			if(options.small) {
+				bodySmall = new Body(getBodyType());
+				initBody(bodySmall, options.small, options);
+			}
+		}
 		
-		protected function set gravity(value:Number):void {
+		public function set gravity(value:Number):void {
 			box.gravMass = value;
 		}
 		
@@ -75,19 +134,19 @@
 			return box.position.y;
 		}
 		
-		protected function set movX(value:Number):void {
+		public function set movX(value:Number):void {
 			box.velocity.x = value * 100;
 		}
 		
-		protected function get movX():Number {
+		public function get movX():Number {
 			return box.velocity.x / 100;
 		}
 		
-		protected function set movY(value:Number):void {
+		public function set movY(value:Number):void {
 			box.velocity.y = value * 100;
 		}
 		
-		protected function get movY():Number {
+		public function get movY():Number {
 			return box.velocity.y / 100;
 		}
 		
@@ -108,26 +167,44 @@
 				mc = new MovieClip();
 				mc.alpha = .6;
 				mc.addEventListener(Event.ENTER_FRAME, onSpace);
-				mc.visible = false;
+				mc.visible = showDebug;
 
 				debug = new BitmapDebug(myStage.stageWidth, myStage.stageHeight, myStage.color);
 				mc.addChild(debug.display);
 				myStage.addChild(mc);
 				
 				defaultCbType = new CbType();
+				stage.addEventListener(KeyboardEvent.KEY_UP, swapMc);
 			}
 			initialize({});
 			index = registry.length;
 			registry.push(this);
+			trace(registry.length, registry[registry.length-1], index);
+			trace(">>>",registry);
+		}
+		
+		private function swapMc(e:KeyboardEvent):void {
+			if(e.keyCode===Keyboard.D) {
+				showDebug = !showDebug;
+				mc.visible = showDebug;
+			}
 		}
 		
 		protected function offStage(e:Event):void {
-			registry[index] = registry[registry.length-1];
-			registry[index].index = index;
-			registry.pop();
+			if(registry.length>0) {
+				registry[index] = registry[registry.length-1];
+				registry[index].index = index;				
+				registry.pop();
+				trace(registry.length, registry[registry.length-1], index);
+				trace("<<<",registry);
+			}
 			index = -1;
 			space.bodies.remove(this.box);
 			box = null;
+			if(listener) {
+				space.listeners.remove(listener);
+				listener = null;
+			}
 			
 			if (registry.length === 0 && space) {
 				space.listeners.clear();
@@ -135,10 +212,9 @@
 				space.clear();
 				floor = null;
 				space = null;
-				
-				myStage.removeChild(debug.display);
-				
+				myStage.removeChild(mc);
 				mc.removeEventListener(Event.ENTER_FRAME, onSpace);
+				myStage.removeEventListener(KeyboardEvent.KEY_DOWN, swapMc);
 				mc = null;
 			}
 		}
@@ -152,12 +228,20 @@
 		protected function updatePosition():void {
 		}
 		
+		static private function processElement(elem:ForceElement, index:int, array:Array):void {
+			try {
+				if(elem) {
+					elem.updatePosition();
+					elem.refreshDisplay();						
+				}
+			} catch(e) {
+				trace(e, elem);
+			}			
+		}
+		
 		static private function onSpace(e:Event):void {
 			space.step(1 / 60);
-			registry.forEach(function(elem:ForceElement, index:int, array:Vector.<ForceElement>) {
-				elem.updatePosition();
-				elem.refreshDisplay();
-			});
+			registry.forEach(processElement);
 			
 			if(mc.visible) {
 				debug.clear();
@@ -166,31 +250,22 @@
 			}
 		}
 		
+		var listener:InteractionListener;
 		protected function addCollisionCheck(cbType:CbType, callback:Function):void {
-			this.box.cbTypes.add(cbType);
-			space.listeners.add(new InteractionListener(
-				CbEvent.BEGIN, InteractionType.COLLISION,
-				cbType, defaultCbType,
-				function(icb:InteractionCallback):void {
-					callback(icb.int2.userData.element);
-				}
-			));
+			if(!listener) {
+				this.box.cbTypes.add(cbType);
+				space.listeners.add(listener = new InteractionListener(
+					CbEvent.BEGIN, InteractionType.COLLISION,
+					cbType, defaultCbType,
+					function(icb:InteractionCallback):void {
+						callback(icb.int2.userData.element);
+					}
+				));				
+			}
 		}
 		
-		static public function findInArea(x:Number, y:Number, radius:Number):ForceElement {
-			var minDsqr:Number = Number.MAX_VALUE;
-			var rsqr:Number = radius * radius;
-			var elem:ForceElement = null;
-			for(var i:int = 0; i<registry.length; i++) {
-				var dx:Number = registry[i].box.position.x - x;
-				var dy:Number = registry[i].box.position.y - y;
-				var dsqr:Number = dx*dx + dy*dy;
-				if(dsqr <= rsqr && dsqr < minDsqr) {
-					minDsqr = dsqr;
-					elem = registry[i];
-				}
-			}
-			return elem;
+		static public function elements():Array {
+			return registry;
 		}
 	}
 	

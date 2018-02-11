@@ -53,6 +53,9 @@
 		}
 		
 		private function processMessage(msg:String):void {
+			var pace:int = Voice.process(msg);
+			var isMute:Boolean = ActionManager.isMute();
+			
 			nextArrow.visible = false;
 			var pos:int = 0;
 			var autoPlayDelay = this.autoPlayDelay;
@@ -76,7 +79,7 @@
 						stage.addEventListener(KeyboardEvent.KEY_UP,nextMessage);							
 					}
 				}
-			},this.speed);
+			},isMute || !pace ? this.speed : pace);
 		}
 	}
 	

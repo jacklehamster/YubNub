@@ -11,16 +11,36 @@
 	import nape.shape.Polygon;
 	import nape.callbacks.CbType;
 	import nape.callbacks.InteractionCallback;
+	import flash.display.DisplayObject;
+	import nape.shape.Shape;
+	import nape.phys.Material;
 	
 	
-	public class MidiKylo extends ForceElement {
-		private var currentState:String;
-		private var keyboard:Object = {};
+	public class MidiKylo extends ForceElement
+		implements SquareCapturer, BulletReceiver
+	{
+		public var currentState:String;
+		static private var keyboard:Object = {};
 		private var locked:Boolean = false;
 		private var momentum:Number = 0;
-		static private var WIDTH = 33, HEIGHT = 68;
+		static private var WIDTH = 33, HEIGHT = 60;
 		private static var cbType:CbType = new CbType();
 		private var previousMovY:Number;
+		private var capture:Capture;
+		public var forceObject:ForceBody;
+		
+		public function captureSquare(value:Capture):void {
+			capture = value;
+		}
+		public function detachSquare(value:Capture):void {
+			if(capture === value) {
+				capture = EmptyCapture.instance;
+			}
+		}
+		
+		override protected function getMaterial():Material {
+			return Material.ice();
+		}
 		
 		override protected function get boxWidth():Number {
 			return WIDTH;
@@ -46,8 +66,6 @@
 			return temp;
 		}
 		
-		var box:Body;
-		
 		public function MidiKylo() {
 			stop();
 			kylo.stop();
@@ -60,14 +78,24 @@
 		
 		override protected function initialize(options:Object):void {
 			options.allowRotation = false;
-			options.mass = 1;
-			options.polygon = Polygon.regular(WIDTH/2, HEIGHT/2, 20);
+			options.mass = .6;
+			options.polygon = new Polygon(
+				Polygon.regular(WIDTH/2, HEIGHT/2, 10),
+				getMaterial()
+			);
+			options.small = new Polygon(
+				Polygon.regular(WIDTH/2, HEIGHT/4, 10),
+				getMaterial()
+			)
 			super.initialize(options);
 			this.addCollisionCheck(cbType, onCollision);
 		}
 		
 		private function onCollision(forceElement:ForceElement):void {
-			if(forceElement.posY > this.posY) {
+			if(forceElement is Enemy) {
+				space.bodies.remove(box);
+				setState("KO");
+			} else if(forceElement.posY > this.posY) {
 				land(previousMovY);
 			}
 		}
@@ -77,14 +105,18 @@
 			movY = 0;
 			momentum = 0;
 			previousMovY = 0;
-			if(delay > 30) {
-				locked = true;
-				setState("crouched");
-				setTimeout(function():void {
-					locked = false;
-				}, delay > 50 ? delay : 10);
+			if(currentState==="forceairborn") {
+				setState("forcepushing");
 			} else {
-				setState("running");
+				if(delay > 30) {
+					locked = true;
+					setState("crouched");
+					setTimeout(function():void {
+						locked = false;
+					}, delay > 50 ? delay : 10);
+				} else {
+					setState("running");
+				}				
 			}
 		}
 		
@@ -157,7 +189,8 @@
 				|| currentState==="standingup" 
 				|| currentState==="startjumping"
 				|| currentState==="startforcejumping"
-				|| currentState==="forcepushing";
+				|| currentState==="forcepushing"
+				|| currentState==="KO";
 		}
 		
 		private function crouched():Boolean {
@@ -169,7 +202,8 @@
 		}
 		
 		private function airborn():Boolean {
-			return currentState==="jumping" || currentState==="forcejumping" || currentState==="falling";
+			return currentState==="jumping" || currentState==="forcejumping" || currentState==="falling"
+				|| currentState==="forceairborn";
 		}
 		
 		private function getMaxY() {
@@ -178,22 +212,50 @@
 		
 		private function move(dx:Number, dy:Number, useForce:Boolean):void {
 			var force:Object = useForce ? forcePower: noPower;
+
+			if(forceObject) {
+				if(useForce)  {
+					var diff:Number = Math.sqrt(dx*dx+dy*dy);
+					if(diff) {
+						forceObject.force.x = dx*2000/diff;
+						forceObject.force.y = dy*2000/diff;						
+					}
+					if((forceObject.posX-posX) * scaleX<0) {
+						this.scaleX = -scaleX;
+					}
+				} else {
+					forceObject.restoreGravity();
+					forceObject = null;
+				}
+			}
+			
 			if(force.jump && !airborn()) {
 				setState("startforcejumping");
+				momentum = 0;
+				movX = 0;
 				return;
 			} else if(dy>0 && inStandPosition()) {
+				this.swapSmall();
 				setState("crouching");
+				momentum = 0;
+				movX = 0;
 				return;
 			} else if(dy == 0 && crouched()) {
 				setState("standingup");
 				return;
+			} else if(force.push && currentState==="forceusing") {
+				return;
 			} else if(dy < 0 && !airborn()) {
 				setState("startjumping");
-				return;
-			} else if(force.push && currentState==="forceusing") {
+				momentum = 0;
+				movX = 0;
 				return;
 			} else if(force.push && !airborn() && currentState!=="forcepushing") {
 				setState("forcepushing");
+				return;
+			} else if(force.push && airborn() && currentState!=="forceairborn") {
+				setState("forceairborn");
+				grabObject();
 				return;
 			}
 			
@@ -205,22 +267,22 @@
 					if (force.jump && currentState==="forcejumping") {
 						gravity = .8;
 					} else if (dy < 0 && currentState==="jumping") {
-						gravity = .7;
+						gravity = .6;
 					} else if (Math.abs(movY) < 5) {
 						gravity = .5;
 					} else {
 						gravity = 1.1;
 					}
 					
-					
-					
 					//movY += gravity;
-					if(movY < 6) {
-						if(currentState!=="forcejumping") {
-							setState("jumping");
-						}
-					} else {
-						setState("falling");
+					if (currentState!=="forceairborn") {
+						if(movY < 6) {
+							if(currentState!=="forcejumping") {
+								setState("jumping");
+							}
+						} else {
+							setState("falling");
+						}						
 					}
 				}
 				previousMovY = movY;
@@ -229,11 +291,11 @@
 			if (dx !== 0) {
 				var speed:Number = 
 					currentState==="forcejumping" && charge < 10 
-					? 8 
+					? 6
 					: airborn() 
-					? 5 
+					? 4 
 					: crouched() 
-					? (this.scaleX * dx < 0 ? 1.5 : 2) : 4;
+					? (this.scaleX * dx < 0 ? .8 : 1) : 3;
 				momentum = speed >= 4 ? dx * speed : 0;
 				//posX = posX + dx * speed;
 				movX = dx * speed;
@@ -259,6 +321,8 @@
 					if(Math.abs(momentum)<0.1) {
 						momentum = 0;
 					}					
+				} else {
+					movX = 0;
 				}
 				if(!airborn()) {
 					setState(crouched()?"crouched":"standing");					
@@ -270,12 +334,13 @@
 			visible = true;
 			locked = true;
 			setState("crouched");
+			GameData.instance.gameStarted = true;
 			setTimeout(function():void {
 				locked = false;
 			}, 400);
 		}
 		
-		private function setState(state:String):void {
+		protected function setState(state:String):void {
 			if (state !== currentState) {
 				currentState = state;
 				kylo.gotoAndStop(currentState);				
@@ -283,18 +348,24 @@
 		}
 		
 		public function doneTransition():void {
+			if(!box) {
+				return;
+			}
 			var power:Number = charge;
 			charge = 0;
 			switch(currentState) {
 				case "crouching":
 					setState("crouched");
+					this.posY += HEIGHT/4;
 					break;
 				case "standingup":
 					setState("standing");
+					this.swapLarge();
+					this.posY -= HEIGHT/4;
 					break;
 				case "startjumping":
 					setState("jumping");
-					movY = -Math.min(power, 10);
+					movY = -Math.min(power*1.5, 12);
 					break;
 				case "startforcejumping":
 					setState("forcejumping");
@@ -302,23 +373,57 @@
 					break;
 				case "forcepushing":
 					setState("forceusing");
-					if(forcePower.push) {
-						grabObject();
+					grabObject();
+					break;
+				case "KO":
+					if(parent) {
+						visible = false;
+						if(SceneHandler.instance) {
+							SceneHandler.instance.restart();
+						}
 					}
 					break;
 			}
 		}
 		
 		private function grabObject():void {
-			var dir:int = scaleX<0?-1:1;
-			var elem:ForceElement = ForceElement.findInArea(posX + dir*70, posY, 50);
-			trace(elem, posX, posY, scaleX);
+			if(!forcePower.push) return;
+			if(forceObject !== null) return;
+			if(capture) {
+				var caught:Array = capture.catchElement(ForceBody.elements());
+				var minDist:Number = Number.MAX_VALUE;
+				var object:ForceBody = null;
+				var dx:Number;
+				for(var i:int=0; i<caught.length; i++) {
+					dx = Math.abs(caught[i].x - x);
+					if(dx < minDist) {
+						minDist = dx;
+						object = caught[i];
+					}
+				}
+				
+				if(object) {
+					dx = x - object.x;
+					object.movY = -.4;
+					object.gravity = 0;
+					forceObject = object;
+				}
+			}
 		}
-		
+		override protected function refreshDisplay():void {
+			x = box.position.x;
+			y = box.bounds.y + box.bounds.height;
+		}
+				
 		override protected function offStage(e:Event):void {
 			myStage.removeEventListener(KeyboardEvent.KEY_UP, onKey);			
 			myStage.removeEventListener(KeyboardEvent.KEY_DOWN, onKey);	
 			super.offStage(e);
+		}
+		
+		public function gotHit(bullet:Bullet):void {
+			space.bodies.remove(box);
+			setState("KO");
 		}
 	}
 	

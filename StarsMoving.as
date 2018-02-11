@@ -7,6 +7,7 @@
 	public class StarsMoving extends MovieClip {
 		var xNum:Number, yNum:Number, scale:Number;
 		var speed = 1 + Math.random()*0.01;
+		private var orgScale:Number, orgX:Number, orgY:Number;
 		
 		public function StarsMoving() {
 			this.addEventListener(Event.ADDED_TO_STAGE, onStage);
@@ -14,6 +15,10 @@
 			xNum = (Math.random()-.5)*400;
 			yNum = (Math.random()-.5)*200;
 			scale = 0.02 * Math.random();
+			orgX = x; orgY = y; orgScale = scaleX;
+			x = xNum;
+			y = yNum;
+			scaleX = scaleY = scale;
 		}
 		
 		private function onFrame(e:Event):void {
@@ -32,6 +37,9 @@
 		
 		public function freeze():void {
 			removeEventListener(Event.ENTER_FRAME, onFrame);			
+			x = orgX;
+			y = orgY;
+			scaleX = scaleY = orgScale;
 		}
 		
 		private function onStage(e:Event):void {

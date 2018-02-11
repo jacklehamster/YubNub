@@ -20,16 +20,17 @@
 			myStage.addEventListener(KeyboardEvent.KEY_UP, onKey);			
 		}
 		
+		private function offStage(e:Event):void {
+			myStage.removeEventListener(KeyboardEvent.KEY_UP, onKey);			
+		}
+		
 		private function onKey(e:KeyboardEvent):void {			
-			if(e.keyCode==Keyboard.SPACE) {
+			if(e.keyCode===Keyboard.SPACE) {
 				MovieClip(parent).play();
 				myStage.removeEventListener(KeyboardEvent.KEY_UP, onKey);							
 			}
 		}
 		
-		private function offStage(e:Event):void {
-			myStage.removeEventListener(KeyboardEvent.KEY_UP, onKey);			
-		}
 	}
 	
 }

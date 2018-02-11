@@ -53,6 +53,10 @@
 			SoundMixer.soundTransform = new SoundTransform(so.data[MUTE] ? 0 : 1);
 		}
 		
+		static public function isMute():Boolean {
+			return SharedObject.getLocal("yubnub").data[MUTE];
+		}
+		
 		static public function active(action:String):Boolean {
 			switch(action) {
 				case "mute":

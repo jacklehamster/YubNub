@@ -30,7 +30,7 @@
 			if (e.keyCode===Keyboard.LEFT || e.keyCode==Keyboard.RIGHT) {
 				gotoAndStop(currentLabel==="LIE"?"TRUTH":"LIE");
 				selectSound.play();
-			} else if(e.keyCode===Keyboard.SPACE) {
+			} else if(e.keyCode===Keyboard.SPACE || e.keyCode===Keyboard.ENTER) {
 				MovieClip(parent).choice = currentLabel;
 				MovieClip(parent).play();
 				myStage.removeEventListener(KeyboardEvent.KEY_DOWN, onKey);			

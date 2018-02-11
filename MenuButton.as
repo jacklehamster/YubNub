@@ -68,7 +68,7 @@
 					selectedInstance.gotoAndPlay("ACTION");
 				} else {
 					ActionManager.performAction(selectedInstance.name);
-				}				
+				}
 			} else {
 				return;
 			}

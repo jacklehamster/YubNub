@@ -26,7 +26,7 @@
 		private function onKey(e:KeyboardEvent):void {
 			if (e.keyCode===Keyboard.LEFT || e.keyCode==Keyboard.RIGHT) {
 				gotoAndStop(currentLabel==="SAVE"?"KILL":"SAVE");
-			} else if(e.keyCode===Keyboard.SPACE) {
+			} else if(e.keyCode===Keyboard.SPACE || e.keyCode===Keyboard.ENTER) {
 				if(currentLabel==="KILL") {
 					MovieClip(parent).play();
 				} else {
