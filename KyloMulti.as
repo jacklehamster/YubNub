@@ -11,6 +11,10 @@
 			return kylo_animation;
 		}
 		
+		override protected function learn():void {
+			gotoAndPlay("LEARN");
+		}
+		
 		override protected function onStage(e:Event):void {
 			super.onStage(e);
 			instance = this;
@@ -29,6 +33,14 @@
 				instance = null;
 			}
 			super.offStage(e);
+		}
+		
+		public function doneSuperTransition():void {
+			switch(currentLabel) {
+				case "LEARN":
+					gotoAndStop("LIGHT");
+					break;
+			}
 		}
 	}	
 }

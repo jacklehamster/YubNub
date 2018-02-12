@@ -21,6 +21,14 @@
 		
 		public function Dialog() {
 			color = "#"+(tf.textColor.toString(16));
+			tf.visible = showSubtitle();
+			if(background) {
+				background.visible = tf.visible;				
+			}
+		}
+		
+		protected function showSubtitle():Boolean {
+			return name==="finaldialog" || ActionManager.showSubtitle();
 		}
 		
 		public function startDialog(
@@ -54,7 +62,7 @@
 		
 		private function processMessage(msg:String):void {
 			var pace:int = Voice.process(msg);
-			var isMute:Boolean = ActionManager.isMute();
+			var hearVoice:Boolean = ActionManager.hearVoice();
 			
 			nextArrow.visible = false;
 			var pos:int = 0;
@@ -79,7 +87,7 @@
 						stage.addEventListener(KeyboardEvent.KEY_UP,nextMessage);							
 					}
 				}
-			},isMute || !pace ? this.speed : pace);
+			},!hearVoice || !pace ? this.speed : pace);
 		}
 	}
 	

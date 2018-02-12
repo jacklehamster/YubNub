@@ -17,10 +17,9 @@
 	import flash.events.KeyboardEvent;
 	import flash.ui.Keyboard;
 	
-	public class ForceElement extends MovieClip {
+	public class ForceElement extends Element {
 		protected var MAXY = 410;
 
-		protected var myStage:Stage;
 		static protected var space:Space;
 		static private var floor:Body;
 		static private var debug:BitmapDebug;
@@ -30,12 +29,11 @@
 		static private var showDebug:Boolean = false;
 		
 		
-		public var index:int = -1;
-		static private var registry:Array = [];
 		
 		protected var box:Body;
 		protected var mainBody:Body;
 		protected var bodySmall:Body;
+		private var shakeValue:Number = 0;
 		
 		protected function swapSmall():void {
 			if(box === mainBody) {
@@ -110,6 +108,10 @@
 			box.gravMass = value;
 		}
 		
+		public function get gravity():Number {
+			return box.gravMass;
+		}
+		
 		protected function get boxWidth():Number {
 			return width;
 		}
@@ -151,18 +153,19 @@
 		}
 		
 		public function ForceElement() {
-			this.addEventListener(Event.ADDED_TO_STAGE, onStage);
-			this.addEventListener(Event.REMOVED_FROM_STAGE, offStage);
 		}
 		
-		protected function onStage(e:Event):void {
-			myStage = stage;
+		override protected function onStage(e:Event):void {
+			super.onStage(e);
 			if (!space) {
 				space = new Space(Vec2.weak(0, 5000));
+		
 				
-				floor = new Body(BodyType.STATIC);
-				floor.shapes.add(new Polygon(Polygon.rect(0, MAXY, myStage.stageWidth, myStage.stageHeight)));
-				floor.space = space;
+				if(GameData.instance.location.y === 0) {
+					floor = new Body(BodyType.STATIC);
+					floor.shapes.add(new Polygon(Polygon.rect(0, MAXY, myStage.stageWidth, myStage.stageHeight)));
+					floor.space = space;					
+				}
 				
 				mc = new MovieClip();
 				mc.alpha = .6;
@@ -177,8 +180,6 @@
 				stage.addEventListener(KeyboardEvent.KEY_UP, swapMc);
 			}
 			initialize({});
-			index = registry.length;
-			registry.push(this);
 		}
 		
 		private function swapMc(e:KeyboardEvent):void {
@@ -188,13 +189,7 @@
 			}
 		}
 		
-		protected function offStage(e:Event):void {
-			if(registry.length>0) {
-				registry[index] = registry[registry.length-1];
-				registry[index].index = index;				
-				registry.pop();
-			}
-			index = -1;
+		override protected function offStage(e:Event):void {
 			space.bodies.remove(this.box);
 			box = null;
 			if(listener) {
@@ -202,7 +197,7 @@
 				listener = null;
 			}
 			
-			if (registry.length === 0 && space) {
+			if (elements().length === 0 && space) {
 				space.listeners.clear();
 				space.bodies.clear();
 				space.clear();
@@ -213,31 +208,51 @@
 				myStage.removeEventListener(KeyboardEvent.KEY_DOWN, swapMc);
 				mc = null;
 			}
+			super.offStage(e);
 		}
 		
 		protected function refreshDisplay():void {
-			x = box.position.x;
-			y = box.position.y;
-			rotation = box.rotation * 180 / Math.PI;
+			if(box) {
+				x = box.position.x + (Math.random()-.5)*shakeValue;
+				y = box.position.y + (Math.random()-.5)*shakeValue;
+				rotation = box.rotation * 180 / Math.PI + (Math.random()-.5)*shakeValue;
+				if(shakeValue > 0) {
+					shakeValue --;
+				}				
+			}
 		}
 		
 		protected function updatePosition():void {
 		}
 		
-		static private function processElement(elem:ForceElement, index:int, array:Array):void {
+		public function get top():Number {
+			return posY - this.boxHeight/2;
+		}
+		
+		public function get bottom():Number {
+			return posY + this.boxHeight/2;
+		}
+		
+		static private function processElement(elem:Element, index:int, array:Array):void {
+			if(!elem is ForceElement) {
+				return;
+			}
 			try {
-				if(elem) {
-					elem.updatePosition();
-					elem.refreshDisplay();						
+				var forceElem:ForceElement = elem as ForceElement;
+				if(forceElem) {
+					forceElem.updatePosition();
+					forceElem.refreshDisplay();						
 				}
 			} catch(e) {
-				trace(e, elem);
+				trace(e, forceElem);
+				throw e;
 			}			
 		}
 		
 		static private function onSpace(e:Event):void {
 			space.step(1 / 60);
-			registry.forEach(processElement);
+			var elems:Array = Element.elements();
+			elems.forEach(processElement);
 			
 			if(mc.visible) {
 				debug.clear();
@@ -261,7 +276,15 @@
 		}
 		
 		static public function elements():Array {
-			return registry;
+			return Element.elements().filter(isForceElement);
+		}
+		
+		static private function isForceElement(elem:Element, index:int, array:Array):Boolean {
+			return elem is ForceElement;
+		}
+		
+		public function shake():void {
+			shakeValue = 10;
 		}
 	}
 	

@@ -8,6 +8,11 @@
 		public var velocity:Object = { x:0, y:0 };
 		public var location:Object = { x:0, y:0 };
 		public var state:String = null;
+		
+		public var forcePowers:Object = {
+			jump: false,
+			push: true
+		};
 	}
 	
 }

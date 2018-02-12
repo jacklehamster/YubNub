@@ -31,7 +31,7 @@
 			iniRotation = rotation;
 		}
 		private function offStage(e:Event):void {
-			addEventListener(Event.ENTER_FRAME, onFrame);
+			removeEventListener(Event.ENTER_FRAME, onFrame);
 		}
 		
 		private function onFrame(e:Event):void {

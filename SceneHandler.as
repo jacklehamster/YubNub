@@ -11,7 +11,14 @@
 			"0/0": "GameStart",
 			"-1/0": "GS_Ground_BlockLeft",
 			"1/0": "GS_Ground_FirstSteps",
-			"2/0": "GS_Ground_FirstEncounter"
+			"2/0": "GS_Ground_FirstEncounter",
+			"3/0": "GS_Ground_Midpoint",
+			"4/0": "GS_Ground_GoUp",
+			"4/-10": "GS_AlmostDone",
+			"5/-10": "GS_Last",
+			"3/-10": "GS_Air_Climb"
+//			"3/-1": "GS_Air_Climb"
+//			"0/-1": "GS_Air_Climb"
 		};
 		
 		static public var instance:SceneHandler;
@@ -25,6 +32,12 @@
 		public function restart() {
 			GameData.instance.gameStarted = false;
 			gotoLocation(0,0, null);
+		}
+		
+
+		public function hasLocation(sceneX:int, sceneY:int):Boolean {
+			var sceneName:String = sceneX + "/" + sceneY;
+			return locationToScene[sceneName];
 		}
 
 		public function gotoLocation(
@@ -62,18 +75,50 @@
 			}
 		}
 		
+		private function handleSceneExit(sceneName:String):Boolean {
+			switch(sceneName) {
+				case "GS_Ground_Tree":
+					gotoLocation(4, 0, null);
+					GameData.instance.gameStarted = true;
+					return true;
+					break;
+				case "GS_Air_Climb":
+					gotoLocation(4, -10, null);
+					GameData.instance.gameStarted = true;
+					return true;
+					break;
+			}
+			return false;
+		}
+		
 		private function onFrame(e:Event):void {
 			if(KyloMulti.instance) {
+				var theRoot:MovieClip = MovieClip(root);
+				if(!theRoot) return;
 				if(KyloMulti.instance.posX > stage.stageWidth) {
-					gotoLocation(
-						GameData.instance.location.x + 1, GameData.instance.location.y,
-						KyloMulti.instance
-					);
+					if(handleSceneExit(theRoot.currentScene.name)) {
+						return;
+					} else {
+						gotoLocation(
+							GameData.instance.location.x + 1, GameData.instance.location.y,
+							KyloMulti.instance
+						);						
+					}
 				} else if(KyloMulti.instance.posX < 0) {
-					gotoLocation(
-						GameData.instance.location.x - 1, GameData.instance.location.y,
-						KyloMulti.instance
-					);
+					if(handleSceneExit(theRoot.currentScene.name)) {
+						return;
+					} else {
+						gotoLocation(
+							GameData.instance.location.x - 1, GameData.instance.location.y,
+							KyloMulti.instance
+						);						
+					}
+				} else if(KyloMulti.instance.posY < 0 
+					&& hasLocation(GameData.instance.location.x, GameData.instance.location.y -1)) {
+						gotoLocation(
+							GameData.instance.location.x, GameData.instance.location.y -1,
+							KyloMulti.instance
+						);
 				}
 			}
 		}

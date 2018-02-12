@@ -32,8 +32,10 @@
 		[Embed(source="voice-over-my-dead.mp3")] static private var voice_over_my_dead_body : Class;
 		[Embed(source="voice-never-id-rather.mp3")] static private var voice_never_id_rather : Class;
 		[Embed(source="voice-prepare-to-die.mp3")] static private var voice_prepare_to_die : Class;
+		[Embed(source="voice-ben-shut-beep.mp3")] static private var voice_ben_shut_beep : Class;
 		[Embed(source="voice-ben-shut.mp3")] static private var voice_ben_shut : Class;
 		[Embed(source="voice-god-damnit.mp3")] static private var voice_godamnit : Class;
+		[Embed(source="voice-godmanit-beep.mp3")] static private var voice_goddamnit_beep : Class;
 		[Embed(source="voice-rey-do-what-he-says.mp3")] static private var voice_rey_do_what_he_says : Class;
 		[Embed(source="voice-excellent-work.mp3")] static private var voice_excellent_work : Class;
 		[Embed(source="voice-you-are-not.mp3")] static private var voice_you_are_not : Class;
@@ -93,7 +95,7 @@
 				case "... when y":
 					return [new voice_when_you_die,2,37];
 				case "that alone":
-					return [new voice_that_alone,2,55];
+					return [new voice_that_alone,2,45];
 				case "did you re":
 					return [new voice_did_you_really,2,40];
 				case "that's rig":
@@ -103,7 +105,7 @@
 				case "oh, you'd ":
 					return [new voice_oh_youd_be_surprised, 2, 35];
 				case "ben, look ":
-					return [new voice_ben_look_into, 2, 65];
+					return [new voice_ben_look_into, 3, 65];
 				case "you will c":
 					return [new voice_you_will_convert, 2, 70];
 				case "dark side,":
@@ -125,9 +127,9 @@
 				case "rey. there":
 					return [new voice_rey_there_is_someone, 3, 50];
 				case "ouinnnnn..":
-					return [new voice_ouin, 2, 70];
+					return [new voice_ouin, 1.5, 70];
 				case "i hate you":
-					return [new voice_hate_you_kylo, 2, 70];
+					return [new voice_hate_you_kylo, 1.5, 70];
 				case "rey, stop ":
 					return [new voice_rey_stop_crying, 3, 60];
 				case "you! you a":
@@ -143,7 +145,9 @@
 				case "goddamn it":
 					return [new voice_godamnit, 2, 40];
 				case "ben... shu":
-					return [new voice_ben_shut, 1, 40];
+					var voice:Sound = ActionManager.isCensored() 
+						? new voice_ben_shut_beep() : new voice_ben_shut();
+					return [voice, 1.5, 40];
 				case "rey, do wh":
 					return [new voice_rey_do_what_he_says, 3, 55];
 				case "excellent ":
@@ -240,11 +244,16 @@
 					return [new voice_i_cant_think, 1.5, 55];
 				case "...at last":
 					return [new voice_at_last, 2, 60];
+				case "*beep* it,":
+					return [new voice_goddamnit_beep, 2, 40];
 			}
 			return [null];
 		}
 		
 		static public function process(msg:String):int {
+			if(!ActionManager.hearVoice()) {
+				return 0;
+			}
 			var soundInfo:Array = getVoice(msg);
 			var sound:Sound = soundInfo[0];
 			if(sound) {

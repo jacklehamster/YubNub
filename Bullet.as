@@ -20,9 +20,9 @@
 		}
 		
 		override protected function updatePosition():void {
-			if(stage) {
+			if(stage && box) {
 				if(this.posX < 0 || this.posX > stage.stageWidth) {
-					MovieClip(parent).removeChild(this);
+					parent.removeChild(this);
 				}				
 			}
 		}

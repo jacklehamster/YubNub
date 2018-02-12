@@ -30,6 +30,13 @@
 			}
 		}
 		
+		override protected function updatePosition():void {
+			var dx:Number = KyloMulti.instance.posX - posX;
+			if(dx * scaleX<0) {
+				scaleX = -scaleX;
+			}
+		}
+		
 		public function doneTransition():void {
 			if(parent) {
 				MovieClip(parent).removeChild(this);

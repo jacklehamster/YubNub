@@ -67,7 +67,17 @@
 					animating = true;
 					selectedInstance.gotoAndPlay("ACTION");
 				} else {
-					ActionManager.performAction(selectedInstance.name);
+					var nextSelection = ActionManager.performAction(selectedInstance.name);
+					if(nextSelection) {
+						selectedIndex = -1;
+						for(i=0; i<instances.length; i++) {
+							if(instances[i].active && instances[i].name===nextSelection) {
+								selectedIndex = i;
+								break;
+							}
+						}
+						checkAllSelected();						
+					}
 				}
 			} else {
 				return;

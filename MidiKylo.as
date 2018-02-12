@@ -28,6 +28,7 @@
 		private var previousMovY:Number;
 		private var capture:Capture;
 		public var forceObject:ForceBody;
+		public var platformSupport:ForceElement;
 		
 		public function captureSquare(value:Capture):void {
 			capture = value;
@@ -56,7 +57,7 @@
 			jump: false,
 			push: false
 		};
-		private var forcePower:Object = {
+		public var forcePower:Object = {
 			jump: false,
 			push: true
 		};
@@ -92,17 +93,20 @@
 		}
 		
 		private function onCollision(forceElement:ForceElement):void {
-			if(forceElement is Enemy) {
+			if(this.inTransition()) {
+				
+			}else if(forceElement is Enemy) {
 				space.bodies.remove(box);
 				setState("KO");
-			} else if(forceElement.posY > this.posY) {
+			} else if(forceElement is ForceBody && forceElement.posY > posY || forceElement.top > this.bottom-2) {
 				land(previousMovY);
+				platformSupport = forceElement;
 			}
 		}
 		
 		private function land(speed:Number):void {
 			var delay = Math.abs(speed*5);
-			movY = 0;
+			//movY = 0;
 			momentum = 0;
 			previousMovY = 0;
 			if(currentState==="forceairborn") {
@@ -125,6 +129,7 @@
 			super.onStage(e);
 			myStage.addEventListener(KeyboardEvent.KEY_DOWN, onKey);			
 			myStage.addEventListener(KeyboardEvent.KEY_UP, onKey);
+			forcePower.jump = GameData.instance.forcePowers.jump;
 		}
 		
 		private function handleKeyChange(keyCode:int, value:Boolean):void {
@@ -181,7 +186,7 @@
 		}
 		
 		private function canMove():Boolean {
-			return !inTransition() && !locked;
+			return !inTransition() && !locked && visible;
 		}
 		
 		private function inTransition():Boolean {
@@ -193,7 +198,7 @@
 				|| currentState==="KO";
 		}
 		
-		private function crouched():Boolean {
+		public function crouched():Boolean {
 			return currentState==="crawling" || currentState==="crawlingback" || currentState==="crouched";
 		}
 		
@@ -208,6 +213,10 @@
 		
 		private function getMaxY() {
 			return MAXY - HEIGHT/2;
+		}
+		
+		protected function learn():void {
+			
 		}
 		
 		private function move(dx:Number, dy:Number, useForce:Boolean):void {
@@ -229,8 +238,22 @@
 				}
 			}
 			
-			if(force.jump && !airborn()) {
+			if ((currentState==="climbing" || currentState==="climbed")  && dx===0) {
+				if(Climber.getClimber()) {
+					movY = 3 * dy;					
+				} else {
+					movY = 0;
+				}
+				setState(movY !== 0 ? "climbing" : "climbed");
+				return;
+			} else if((force.jump || useForce && Yoda.praying()) && !airborn() && this.crouched()) {
+				if(!force.jump) {
+					GameData.instance.forcePowers.jump = true;
+					force.jump = true;
+					learn();
+				}
 				setState("startforcejumping");
+				this.swapLarge();
 				momentum = 0;
 				movX = 0;
 				return;
@@ -246,9 +269,15 @@
 			} else if(force.push && currentState==="forceusing") {
 				return;
 			} else if(dy < 0 && !airborn()) {
-				setState("startjumping");
-				momentum = 0;
-				movX = 0;
+				if(Climber.getClimber()) {
+					setState("climbing");
+					gravity = 0;
+				} else {
+					setState("startjumping");
+					momentum = 0;
+					movX = 0;	
+					platformSupport = null;
+				}
 				return;
 			} else if(force.push && !airborn() && currentState!=="forcepushing") {
 				setState("forcepushing");
@@ -260,7 +289,7 @@
 			}
 			
 			if (airborn()) {
-				if(posY >= getMaxY()) {
+				if(posY >= getMaxY() && movY>=0) {
 					land(previousMovY);
 					return;
 				} else {
@@ -298,7 +327,7 @@
 					? (this.scaleX * dx < 0 ? .8 : 1) : 3;
 				momentum = speed >= 4 ? dx * speed : 0;
 				//posX = posX + dx * speed;
-				movX = dx * speed;
+				movX = dx * speed;					
 				if(!airborn()) {
 					setState(inStandPosition()
 						?"running"
@@ -307,6 +336,9 @@
 						:crouched()
 						?"crawling"
 						:"standing");					
+					if(gravity===0) {
+						gravity = 1.1;
+					}
 				}
 				
 				if (currentState==="running" || airborn()) {				
@@ -317,12 +349,12 @@
 			} else {
 				if(momentum) {
 					momentum *= .8;
-					movX = momentum;
+					//movX = momentum;
 					if(Math.abs(momentum)<0.1) {
 						momentum = 0;
 					}					
 				} else {
-					movX = 0;
+					//movX = 0;
 				}
 				if(!airborn()) {
 					setState(crouched()?"crouched":"standing");					
@@ -407,6 +439,7 @@
 					object.movY = -.4;
 					object.gravity = 0;
 					forceObject = object;
+					forceObject.shake();
 				}
 			}
 		}
