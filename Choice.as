@@ -9,6 +9,7 @@
 	
 	public class Choice extends MovieClip {
 		private var myStage:Stage;
+		static public var choice:String;
 		
 		
 		public function Choice() {
@@ -24,9 +25,12 @@
 		}
 		
 		private function onKey(e:KeyboardEvent):void {
-			if (e.keyCode===Keyboard.LEFT || e.keyCode==Keyboard.RIGHT) {
+			if (e.keyCode===Keyboard.LEFT || e.keyCode==Keyboard.RIGHT 
+				|| e.keyCode===Keyboard.A || e.keyCode===Keyboard.D
+				|| e.keyCode===Keyboard.Q) {
 				gotoAndStop(currentLabel==="SAVE"?"KILL":"SAVE");
 			} else if(e.keyCode===Keyboard.SPACE || e.keyCode===Keyboard.ENTER) {
+				choice = currentLabel;
 				if(currentLabel==="KILL") {
 					MovieClip(parent).play();
 				} else {

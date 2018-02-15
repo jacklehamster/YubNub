@@ -16,6 +16,7 @@
 		private static const VOICE_SETTING:String = "voice_setting";
 		private static var instance:ActionManager;
 		static private var lukeTheme:Sound;
+		static public var skippedIntro:Boolean;
 		public var channel;
 		
 		public function ActionManager() {
@@ -144,6 +145,7 @@
 						root.gotoAndPlay(1, "Intro");
 						break;
 					case "skipIntro":
+						skippedIntro = true;
 						root.gotoAndPlay(1, "Decision");
 						break;
 					case "options":

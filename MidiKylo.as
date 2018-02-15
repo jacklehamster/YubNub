@@ -29,6 +29,7 @@
 		private var capture:Capture;
 		public var forceObject:ForceBody;
 		public var platformSupport:ForceElement;
+		static public var death:int = 0;
 		
 		public function captureSquare(value:Capture):void {
 			capture = value;
@@ -40,7 +41,8 @@
 		}
 		
 		override protected function getMaterial():Material {
-			return Material.ice();
+			return Material.wood();
+//			return Material.ice();
 		}
 		
 		override protected function get boxWidth():Number {
@@ -93,11 +95,10 @@
 		}
 		
 		private function onCollision(forceElement:ForceElement):void {
-			if(this.inTransition()) {
-				
-			}else if(forceElement is Enemy) {
+			if(forceElement is Enemy) {
 				space.bodies.remove(box);
 				setState("KO");
+			} else if(this.inTransition()) {			
 			} else if(forceElement is ForceBody && forceElement.posY > posY || forceElement.top > this.bottom-2) {
 				land(previousMovY);
 				platformSupport = forceElement;
@@ -134,6 +135,9 @@
 		
 		private function handleKeyChange(keyCode:int, value:Boolean):void {
 			switch(keyCode) {
+				case Keyboard.ESCAPE:
+					this.gotHit(null);
+					break;
 				case Keyboard.SPACE:
 					if(value) {
 						charge = 0;
@@ -141,6 +145,8 @@
 						refreshDisplay();
 					}
 					break;
+				case Keyboard.W:
+				case Keyboard.Z:
 				case Keyboard.UP:
 					if(value) {
 						charge = 0;
@@ -162,22 +168,22 @@
 		
 		override protected function updatePosition():void {
 			var dx:Number = 0, dy:Number = 0, useForce:Boolean = false;
-			if (keyboard[Keyboard.LEFT]) {
+			if (keyboard[Keyboard.LEFT] || keyboard[Keyboard.A] || keyboard[Keyboard.Q]) {
 				dx --;
 			}
-			if (keyboard[Keyboard.RIGHT]) {
+			if (keyboard[Keyboard.RIGHT] || keyboard[Keyboard.D]) {
 				dx ++;
 			}
-			if (keyboard[Keyboard.DOWN]) {
+			if (keyboard[Keyboard.DOWN] || keyboard[Keyboard.S]) {
 				dy ++;
 			}
-			if (keyboard[Keyboard.UP]) {
+			if (keyboard[Keyboard.UP] || keyboard[Keyboard.W] || keyboard[Keyboard.Z]) {
 				dy --;
 			}
 			if (keyboard[Keyboard.SPACE]) {
 				useForce = true;
 			}
-			if (keyboard[Keyboard.SPACE] || keyboard[Keyboard.UP]) {
+			if (keyboard[Keyboard.SPACE] || keyboard[Keyboard.UP] || keyboard[Keyboard.W] || keyboard[Keyboard.Z]) {
 				charge ++;
 			}
 			if (canMove()) {
@@ -222,6 +228,9 @@
 		private function move(dx:Number, dy:Number, useForce:Boolean):void {
 			var force:Object = useForce ? forcePower: noPower;
 
+			if(forceObject && !forceObject.parent) {
+				forceObject = null;
+			}
 			if(forceObject) {
 				if(useForce)  {
 					var diff:Number = Math.sqrt(dx*dx+dy*dy);
@@ -409,6 +418,7 @@
 					break;
 				case "KO":
 					if(parent) {
+						death++;
 						MovieClip(parent).removeChild(this);
 						if(SceneHandler.instance) {
 							SceneHandler.instance.restart();
@@ -437,6 +447,7 @@
 				if(object) {
 					dx = x - object.x;
 					object.movY = -.4;
+					object.movX = 0;
 					object.gravity = 0;
 					forceObject = object;
 					forceObject.shake();

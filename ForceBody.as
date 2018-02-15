@@ -13,8 +13,10 @@
 		}
 		
 		public function restoreGravity():void {
-			box.gravMass = defaultGravMass;
-			force.setxy(0,0);
+			if(box) {
+				box.gravMass = defaultGravMass;
+				force.setxy(0,0);				
+			}
 		}		
 		
 		public function get force():Vec2 {

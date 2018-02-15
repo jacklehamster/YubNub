@@ -7,7 +7,7 @@
 		
 		
 		public function Symbol107() {
-			stop();
+			gotoAndStop(Math.floor(Math.random()*totalFrames) + 1);
 		}
 	}
 	

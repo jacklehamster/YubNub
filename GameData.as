@@ -8,11 +8,20 @@
 		public var velocity:Object = { x:0, y:0 };
 		public var location:Object = { x:0, y:0 };
 		public var state:String = null;
+		public var checkPoint:Array = null;
 		
 		public var forcePowers:Object = {
 			jump: false,
 			push: true
 		};
+		
+		public function ensureLocation(sceneName:String):void {
+			var loc:Array = SceneHandler.getLoc(sceneName);
+			if(loc) {
+				location.x = loc[0];
+				location.y = loc[1];				
+			}			
+		}
 	}
 	
 }

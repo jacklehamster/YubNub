@@ -11,7 +11,8 @@
 	public class Choice2 extends MovieClip {
 		private var myStage:Stage;
 		private var selectSound:Sound;
-		
+		static public var choice:String;
+
 		
 		public function Choice2() {
 			stop();
@@ -27,10 +28,13 @@
 		}
 		
 		private function onKey(e:KeyboardEvent):void {
-			if (e.keyCode===Keyboard.LEFT || e.keyCode==Keyboard.RIGHT) {
+			if (e.keyCode===Keyboard.LEFT || e.keyCode==Keyboard.RIGHT 
+					|| e.keyCode===Keyboard.A || e.keyCode===Keyboard.D
+					|| e.keyCode===Keyboard.Q) {
 				gotoAndStop(currentLabel==="LIE"?"TRUTH":"LIE");
 				selectSound.play();
 			} else if(e.keyCode===Keyboard.SPACE || e.keyCode===Keyboard.ENTER) {
+				choice = currentLabel;
 				MovieClip(parent).choice = currentLabel;
 				MovieClip(parent).play();
 				myStage.removeEventListener(KeyboardEvent.KEY_DOWN, onKey);			

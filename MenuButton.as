@@ -6,6 +6,8 @@
 	import flash.events.KeyboardEvent;
 	import flash.ui.Keyboard;
 	import flash.media.Sound;
+	import flash.utils.setTimeout;
+	import flash.utils.clearTimeout;
 	
 	
 	public class MenuButton extends MovieClip {
@@ -48,14 +50,17 @@
 		static private function onKey(e:KeyboardEvent):void {
 			var index:int = getSelectedIndex();
 			var i = index;
-			if(e.keyCode===Keyboard.LEFT || e.keyCode===Keyboard.UP) {
+			if(e.keyCode===Keyboard.LEFT || e.keyCode===Keyboard.UP || 
+				e.keyCode===Keyboard.A || e.keyCode===Keyboard.W || e.keyCode===Keyboard.Q
+				|| e.keyCode===Keyboard.Z) {
 				do {
 					i = (i - 1 + instances.length) % instances.length;					
 				} while(i !== index && !instances[i].active);
 				index = i;
 				selectedIndex = index;
 				checkAllSelected();
-			} else if(e.keyCode===Keyboard.DOWN || e.keyCode===Keyboard.RIGHT) {
+			} else if(e.keyCode===Keyboard.DOWN || e.keyCode===Keyboard.RIGHT ||
+				e.keyCode===Keyboard.S || e.keyCode===Keyboard.D) {
 				do {
 					i = (i + 1 + instances.length) % instances.length;					
 				} while(i !== index && !instances[i].active);
@@ -97,7 +102,8 @@
 			if(instances.length === 1) {
 				addKeyboardEvents();
 			}
-			checkAllSelected();
+			willCheckAllSelected();
+//			checkAllSelected();
 		}
 		
 		static public function checkAllSelected():void {
@@ -105,7 +111,7 @@
 				instances[i].visible = instances[i].selected
 					|| (instances[i].active && instances[i].isVisible);
 				instances[i].gotoAndStop(instances[i].selected?"SELECTED":"NORMAL");
-			}
+			}				
 		}
 		
 		private function get active():Boolean {
@@ -131,7 +137,14 @@
 			if(instances.length === 0) {
 				removeKeyboardEvents();
 			}
-			checkAllSelected();
+			willCheckAllSelected();
+//			checkAllSelected();
+		}
+		
+		static var timeout:int = 0;
+		private function willCheckAllSelected():void {
+			clearTimeout(timeout);
+			timeout = setTimeout(checkAllSelected, 0);
 		}
 		
 		public function doneAnimating():void {

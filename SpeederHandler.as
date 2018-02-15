@@ -28,10 +28,12 @@
 			if (e.type===KeyboardEvent.KEY_UP) {
 				speed = 0;
 				gotoAndStop("PLAY");
-			} else if(e.keyCode==Keyboard.RIGHT || e.keyCode===Keyboard.UP || e.keyCode===Keyboard.SPACE) {
+			} else if(e.keyCode==Keyboard.RIGHT || e.keyCode===Keyboard.UP || e.keyCode===Keyboard.SPACE
+				|| e.keyCode===Keyboard.D || e.keyCode===Keyboard.W || e.keyCode===Keyboard.Z) {
 				gotoAndStop("FORWARD");
 				speed = 5;
-			} else if(e.keyCode===Keyboard.LEFT || e.keyCode===Keyboard.DOWN) {
+			} else if(e.keyCode===Keyboard.LEFT || e.keyCode===Keyboard.DOWN
+				|| e.keyCode===Keyboard.A || e.keyCode===Keyboard.S) {
 				gotoAndStop("REWIND");
 				speed = -5;
 			}

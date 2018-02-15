@@ -19,19 +19,19 @@
 		
 		private function onStage(e:Event):void {
 			myStage = stage;
-			myStage.addEventListener(KeyboardEvent.KEY_UP, onKey);			
+			myStage.addEventListener(KeyboardEvent.KEY_DOWN, onKey);			
 		}
 		
 		private function offStage(e:Event):void {
-			myStage.removeEventListener(KeyboardEvent.KEY_UP, onKey);			
+			myStage.removeEventListener(KeyboardEvent.KEY_DOWN, onKey);			
 		}
 		
 		private function onKey(e:KeyboardEvent):void {			
-			if(e.keyCode===Keyboard.UP) {
+			if(e.keyCode===Keyboard.UP || e.keyCode===Keyboard.W || e.keyCode===Keyboard.Z) {
 				if(capture.catchElement([KyloMulti.instance]).length > 0) {
 					KyloMulti.instance.visible = false;
 					play();
-					myStage.removeEventListener(KeyboardEvent.KEY_UP, onKey);							
+					myStage.removeEventListener(KeyboardEvent.KEY_DOWN, onKey);							
 				}
 			}
 		}

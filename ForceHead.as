@@ -35,7 +35,7 @@
 		}
 		
 		private function onFrame(e:Event):void {
-			if(kylo.forceObject) {
+			if(kylo.forceObject && kylo.forceObject.parent) {
 				rotation = iniRotation + (kylo.posY - kylo.forceObject.posY) / 10;
 			} else {
 				rotation = iniRotation;

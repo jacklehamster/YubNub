@@ -87,7 +87,8 @@
 		
 		static public function getVoice(msg:String):Array {
 //			trace('"'+msg.toLowerCase().substr(0,10)+'"');
-			switch(msg.toLowerCase().substr(0,10)) {
+			var tag = msg.toLowerCase().substr(0,10);
+			switch(tag) {
 				case "what?...":
 					return [new voice_what,3,30];
 				case "did you kn":
@@ -162,7 +163,7 @@
 					return [new voice_guards, 3, 55];
 				case "not so fas":
 					return [new voice_not_so_fast, 2, 50];
-				case "i'm kathle":
+				case "i'm caitli":
 					return [new voice_im_kathleen, 2, 65];
 				case "you weren'":
 					return [new voice_you_werent_planning, 2, 60];
@@ -246,6 +247,8 @@
 					return [new voice_at_last, 2, 60];
 				case "*beep* it,":
 					return [new voice_goddamnit_beep, 2, 40];
+				default:
+					trace(tag);
 			}
 			return [null];
 		}

@@ -13,8 +13,8 @@
 		}
 		
 		override protected function offStage(e:Event):void {
-			super.offStage(e);
 			removeEventListener(Event.ENTER_FRAME, onFrame);
+			super.offStage(e);
 		}
 
 
@@ -36,7 +36,11 @@
 			if(caught.length > 0) {
 				trace("THE END");
 				KyloMulti.instance.visible = false;
+				if(KyloMulti.instance && KyloMulti.instance.parent) {
+					KyloMulti.instance.parent.removeChild(KyloMulti.instance);
+				}
 				MovieClip(root).play();
+				e.currentTarget.removeEventListener(e.type,arguments.callee);
 			}
 		}
 	}

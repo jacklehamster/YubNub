@@ -30,7 +30,7 @@
 		
 		
 		
-		protected var box:Body;
+		public var box:Body;
 		protected var mainBody:Body;
 		protected var bodySmall:Body;
 		private var shakeValue:Number = 0;
@@ -86,6 +86,7 @@
 				switch(i) {
 					case "mass":
 					case "allowRotation":
+					case "gravMass":
 						box[i] = options[i];
 						break;
 				}
@@ -157,15 +158,11 @@
 		
 		override protected function onStage(e:Event):void {
 			super.onStage(e);
+			
 			if (!space) {
 				space = new Space(Vec2.weak(0, 5000));
 		
 				
-				if(GameData.instance.location.y === 0) {
-					floor = new Body(BodyType.STATIC);
-					floor.shapes.add(new Polygon(Polygon.rect(0, MAXY, myStage.stageWidth, myStage.stageHeight)));
-					floor.space = space;					
-				}
 				
 				mc = new MovieClip();
 				mc.alpha = .6;
@@ -179,6 +176,17 @@
 				defaultCbType = new CbType();
 				stage.addEventListener(KeyboardEvent.KEY_UP, swapMc);
 			}
+			
+			GameData.instance.ensureLocation(MovieClip(root).currentScene.name);
+			if(GameData.instance.location.y === 0 && !floor) {
+				floor = new Body(BodyType.STATIC);
+				floor.shapes.add(new Polygon(Polygon.rect(0, MAXY, myStage.stageWidth, myStage.stageHeight)));
+				floor.space = space;					
+			} else if(GameData.instance.location.y !== 0 && floor) {
+				space.bodies.remove(floor);
+				floor = null;
+			}
+			
 			initialize({});
 		}
 		
@@ -263,13 +271,19 @@
 		
 		var listener:InteractionListener;
 		protected function addCollisionCheck(cbType:CbType, callback:Function):void {
+			var self:ForceElement = this;
 			if(!listener) {
 				this.box.cbTypes.add(cbType);
 				space.listeners.add(listener = new InteractionListener(
 					CbEvent.BEGIN, InteractionType.COLLISION,
 					cbType, defaultCbType,
 					function(icb:InteractionCallback):void {
-						callback(icb.int2.userData.element);
+						if(icb.int1.userData.element === self) {
+							callback(icb.int2.userData.element);							
+						}
+						if(icb.int2.userData.element === self) {
+							callback(icb.int1.userData.element);
+						}
 					}
 				));				
 			}

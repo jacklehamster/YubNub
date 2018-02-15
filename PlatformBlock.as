@@ -2,6 +2,8 @@
 	
 	import flash.display.MovieClip;
 	import flash.events.Event;
+	import flash.utils.clearTimeout;
+	import flash.utils.setTimeout;
 	
 	
 	public class PlatformBlock extends StaticBlock {
@@ -14,9 +16,19 @@
 		private function get intY():int {
 			return Math.floor(posY / height);
 		}
-		
+
+		var timeout:int = 0;
 		public function set indexImage(value:int):void {
-			gotoAndStop(value+1);
+			if(!timeout) {
+				gotoAndStop(value+1);
+			}
+			clearTimeout(timeout);
+			timeout = setTimeout(fun,0,value+1);
+		}
+		
+		private function fun(frame:int):void {
+			gotoAndStop(frame);
+			timeout = 0;
 		}
 		
 		public function hasP(iX:int, iY:int):Boolean {

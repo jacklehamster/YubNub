@@ -15,18 +15,17 @@
 			options.allowRotation = false;
 			super.initialize(options);
 //			gravity = 0;
-			var point:Point = root.globalToLocal(localToGlobal(new Point()));
-			prevX = point.x;
-			prevY = point.y;
-			this.addCollisionCheck(cbType, onCollision);
+			var point:Point = root.globalToLocal(localToGlobal(nullPoint));
+			posX = point.x;
+			posY = point.y;
+//			prevX = point.x;
+//			prevY = point.y;
+//			this.addCollisionCheck(cbType, onCollision);
 //			MovieClip(parent).stop();
-		}
-		
-		override protected function getMaterial():Material {
-			return Material.rubber();
-		}
-		
+//			trace("HERE");
 
+		}
+		
 		private var motionPoint:Point = new Point();
 		public function get motion():Point {
 			return motionPoint;
@@ -35,9 +34,10 @@
 		override protected function refreshDisplay():void {
 		}
 		
+		static private var nullPoint:Point = new Point();
 		override protected function updatePosition():void {
 			if(box) {
-				var point:Point = root.globalToLocal(localToGlobal(new Point()));
+				var point:Point = root.globalToLocal(localToGlobal(nullPoint));
 				movX = point.x - posX;
 				movY = point.y - posY;
 //				motionPoint.x = posX - prevX;
@@ -49,11 +49,11 @@
 			}
 		}
 		
-		private function onCollision(forceElement:ForceElement):void {
-			if(forceElement === KyloMulti.instance) {
+//		private function onCollision(forceElement:ForceElement):void {
+//			if(forceElement === KyloMulti.instance) {
 //				MovieClip(parent).stop();
-			}
-		}
+//			}
+//		}
 		
 		
 	}
