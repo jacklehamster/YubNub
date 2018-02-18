@@ -1,12 +1,15 @@
 ﻿package  {
 	import flash.display.MovieClip;
 	import flash.events.Event;
+	import flash.utils.getTimer;
+	import flash.geom.Rectangle;
 	
 	public class SceneHandler extends MovieClip {
 		private var defaultGroundScene:String = "GS_Ground_Default";
 		private var defaultGroundScene2:String = "GS_Ground_Default2";
 		private var defaultAirScene:String = "GS_Air_Default";
 		private var defaultAirScene2:String = "GS_Air_Default2";
+		static private var lastSceneChange:int =0;
 		static public var locationToScene:Object = {
 			"0/0": "GameStart",
 			"-1/0": "GS_Ground_BlockLeft",
@@ -56,6 +59,7 @@
 			kylo:KyloMulti,
 			theRoot:MovieClip = null
 		) {
+			lastSceneChange = getTimer();
 			GameData.instance.location.x = sceneX;
 			GameData.instance.location.y = sceneY;
 			if(kylo) {
@@ -187,6 +191,8 @@
 		}
 		
 		private function onStage(e:Event):void {
+			MovieClip(root).scrollRect = new Rectangle(0,0,
+				stage.stageWidth,stage.stageHeight);
 			addEventListener(Event.ENTER_FRAME, onFrame);
 			instance = this;
 			handleSceneEnter(MovieClip(root).currentScene.name);
