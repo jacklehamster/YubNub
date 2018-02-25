@@ -9,11 +9,18 @@
 		public var location:Object = { x:0, y:0 };
 		public var state:String = null;
 		public var checkPoint:Array = null;
+		public var hasPlayed:Boolean = false;
 		
 		public var forcePowers:Object = {
 			jump: false,
 			push: true
 		};
+		
+		public function clear():void {
+			gameStarted = false;
+			checkPoint = null;
+			state = null;
+		}
 		
 		public function ensureLocation(sceneName:String):void {
 			var loc:Array = SceneHandler.getLoc(sceneName);

@@ -31,7 +31,7 @@
 			} else if(e.keyCode==Keyboard.RIGHT || e.keyCode===Keyboard.UP || e.keyCode===Keyboard.SPACE
 				|| e.keyCode===Keyboard.D || e.keyCode===Keyboard.W || e.keyCode===Keyboard.Z) {
 				gotoAndStop("FORWARD");
-				speed = 5;
+				speed = 8;
 			} else if(e.keyCode===Keyboard.LEFT || e.keyCode===Keyboard.DOWN
 				|| e.keyCode===Keyboard.A || e.keyCode===Keyboard.S) {
 				gotoAndStop("REWIND");

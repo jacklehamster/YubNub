@@ -18,7 +18,6 @@
 		}
 		
 		private function onStage(e:Event):void {
-			visible = isNewgrounds;
 			
 			if(loaderInfo.bytesTotal && loaderInfo.bytesLoaded === loaderInfo.bytesTotal) {
 				if(!isNewgrounds) {
@@ -27,7 +26,7 @@
 				return;
 			}
 			setTimeout(function():void {
-				if(progress < .9) {
+				if(progress < .9 || isNewgrounds) {
 					visible = true;	
 					startBytes = loaderInfo?loaderInfo.bytesLoaded:0;
 				}

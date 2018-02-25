@@ -8,16 +8,19 @@
 	import flash.ui.Keyboard;
 	import flash.utils.setTimeout;
 	import flash.media.Sound;
+	import flash.display.Stage;
 	
 	
 	public class Dialog extends MovieClip {
 		
 		private var dialog:Array = [];
 		private var index:int = -1;
-		private var interval:int;
+		private var timeout:int;
 		private var color:String;
 		private var autoPlayDelay:int;
 		private var speed:int = 30;
+		private var speedUp:Boolean = false;
+		private var myStage:Stage;
 		
 		public function Dialog() {
 			color = "#"+(tf.textColor.toString(16));
@@ -25,6 +28,8 @@
 			if(background) {
 				background.visible = tf.visible;				
 			}
+			this.addEventListener(Event.ADDED_TO_STAGE, onStage);
+			this.addEventListener(Event.REMOVED_FROM_STAGE, offStage);
 		}
 		
 		protected function showSubtitle():Boolean {
@@ -67,14 +72,16 @@
 			nextArrow.visible = false;
 			var pos:int = 0;
 			var autoPlayDelay = this.autoPlayDelay;
-			interval = setInterval(function():void {
+			speedUp = false;
+			var self = this;
+			timeout = setTimeout(function():void {
 				pos++;
 				var t1 = msg.substr(0,pos);
 				var t2 = msg.substr(pos);
 				tf.htmlText = '<font color="'+color+'">'+t1+"</font>"
 					+ '<font color="#000000">'+t2+"</font>";
 				if(pos > msg.length) {
-					clearInterval(interval);
+					speedUp = false;
 					nextArrow.visible = true;
 					if(thumbnail) {
 						thumbnail.icon.gotoAndStop(1);
@@ -86,8 +93,26 @@
 					} else if(stage) {
 						stage.addEventListener(KeyboardEvent.KEY_UP,nextMessage);							
 					}
+				} else {
+					clearInterval(timeout);
+					timeout = setTimeout(arguments.callee, speedUp ? 0 : !hearVoice || !pace ? self.speed : pace);
 				}
-			},!hearVoice || !pace ? this.speed : pace);
+			}, 10);
+		}
+		
+		private function onStage(e:Event):void {
+			myStage = stage;
+			myStage.addEventListener(KeyboardEvent.KEY_UP, onKey);			
+		}
+		
+		private function offStage(e:Event):void {
+			myStage.removeEventListener(KeyboardEvent.KEY_UP, onKey);			
+		}
+		
+		private function onKey(e:KeyboardEvent):void {			
+			if(e.keyCode===Keyboard.SPACE) {
+				speedUp = true;
+			}
 		}
 	}
 	

@@ -53,7 +53,7 @@
 			var caught:Array = capture.catchElement([KyloMulti.instance]);
 			if(caught.length > 0) {
 				if(KyloMulti.instance.forcePower.jump) {
-					gotoAndStop("NORMAL");
+					gotoAndStop("GOUP");
 				} else if(!KyloMulti.instance.crouched()) {
 					gotoAndStop("BOW");					
 				} else {

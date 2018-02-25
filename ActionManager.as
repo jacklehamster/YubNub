@@ -111,21 +111,23 @@
 					return getVoiceSetting()==="subtitle_only";
 				case "silence":
 					return isMute() && getVoiceSetting()==="voice_only";
+				case "skipIntro":
+					return !GameData.instance.hasPlayed;
+				case "continueGame":
+					return GameData.instance.hasPlayed;
 			}
 			return true;
 		}
 		
 		static public function visible(action:String):Boolean {
-			switch(action) {
-				case "skipIntro":
-					return SharedObject.getLocal(YUB_NUB).data[INTRO_SEEN];
-					break;
-			}
 			return true;
 		}
 		
 		static public function canAnimate(action:String):Boolean {
 			switch(action) {
+				case "continueGame":
+					return true;
+					break;
 				case "skipIntro":
 					return true;
 					break;
@@ -143,6 +145,9 @@
 				switch(action) {
 					case "startGame":
 						root.gotoAndPlay(1, "Intro");
+						break;
+					case "continueGame":
+						SceneHandler.instance.restart();
 						break;
 					case "skipIntro":
 						skippedIntro = true;

@@ -148,6 +148,7 @@
 		}
 		
 		public function doneAnimating():void {
+			stop();
 			ActionManager.performAction(name);
 		}
 	}

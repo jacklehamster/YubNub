@@ -191,7 +191,7 @@
 		}
 		
 		private function swapMc(e:KeyboardEvent):void {
-			if(e.keyCode===Keyboard.D) {
+			if(e.keyCode===Keyboard.T) {
 				showDebug = !showDebug;
 				mc.visible = showDebug;
 			}

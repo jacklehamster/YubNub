@@ -41,8 +41,8 @@
 		}
 		
 		override protected function getMaterial():Material {
-			return Material.wood();
-//			return Material.ice();
+//			return Material.wood();
+			return Material.ice();
 		}
 		
 		override protected function get boxWidth():Number {
@@ -79,16 +79,18 @@
 			gotoAndStop(value);
 		}
 		
+		private var mainPolygon:Polygon;
+		
 		override protected function initialize(options:Object):void {
 			options.allowRotation = false;
 			options.mass = .6;
-			options.polygon = new Polygon(
+			mainPolygon = options.polygon = new Polygon(
 				Polygon.regular(WIDTH/2, HEIGHT/2, 10),
 				getMaterial()
 			);
 			options.small = new Polygon(
 				Polygon.regular(WIDTH/2, HEIGHT/4, 10),
-				getMaterial()
+				Material.steel()
 			)
 			super.initialize(options);
 			this.addCollisionCheck(cbType, onCollision);
@@ -184,7 +186,7 @@
 				useForce = true;
 			}
 			if (keyboard[Keyboard.SPACE] || keyboard[Keyboard.UP] || keyboard[Keyboard.W] || keyboard[Keyboard.Z]) {
-				charge ++;
+				charge +=2;
 			}
 			if (canMove()) {
 				move(dx, dy, useForce);
@@ -235,8 +237,8 @@
 				if(useForce)  {
 					var diff:Number = Math.sqrt(dx*dx+dy*dy);
 					if(diff) {
-						forceObject.force.x = dx*2000/diff;
-						forceObject.force.y = dy*2000/diff;						
+						forceObject.force.x = dx*1500/diff;
+						forceObject.force.y = dy*1500/diff;						
 					}
 					if((forceObject.posX-posX) * scaleX<0) {
 						this.scaleX = -scaleX;
@@ -246,6 +248,7 @@
 					forceObject = null;
 				}
 			}
+			mainPolygon.material = airborn() ? Material.ice() : Material.steel();
 			
 			if ((currentState==="climbing" || currentState==="climbed")  && dx===0) {
 				if(Climber.getClimber()) {
@@ -331,7 +334,7 @@
 					currentState==="forcejumping" && charge < 10 
 					? 6
 					: airborn() 
-					? 4 
+					? 3.5
 					: crouched() 
 					? (this.scaleX * dx < 0 ? .8 : 1) : 3;
 				momentum = speed >= 4 ? dx * speed : 0;
@@ -376,6 +379,7 @@
 			locked = true;
 			setState("crouched");
 			GameData.instance.gameStarted = true;
+			GameData.instance.hasPlayed = true;
 			setTimeout(function():void {
 				locked = false;
 			}, 400);

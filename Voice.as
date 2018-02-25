@@ -2,8 +2,11 @@
 	import flash.media.Sound;
 	import flash.media.SoundTransform;
 	import nape.callbacks.Callback;
+	import flash.media.SoundChannel;
 	
 	public class Voice {
+		
+		static private var soundChannel:SoundChannel = null;
 
 		[Embed(source="voice-what.mp3")] static private var voice_what : Class;
 		[Embed(source="voice-did-you-know.mp3")] static private var voice_did_you_know : Class;
@@ -260,10 +263,20 @@
 			var soundInfo:Array = getVoice(msg);
 			var sound:Sound = soundInfo[0];
 			if(sound) {
+				if(soundChannel !== null) {
+					soundChannel.stop();
+				}
 				var volume = soundInfo[1] || 1;
-				sound.play(0,0,new SoundTransform(volume));
+				soundChannel = sound.play(0,0,new SoundTransform(volume));
 			}
 			return soundInfo[2];
+		}
+		
+		static public function cut():void {
+			if(soundChannel !== null) {
+				soundChannel.stop();
+				soundChannel = null;
+			}
 		}
 
 	}

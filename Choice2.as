@@ -25,24 +25,31 @@
 			MovieClip(parent).stop();
 			myStage = stage;
 			myStage.addEventListener(KeyboardEvent.KEY_DOWN, onKey);			
+			myStage.addEventListener(KeyboardEvent.KEY_UP, onKey);			
 		}
 		
 		private function onKey(e:KeyboardEvent):void {
 			if (e.keyCode===Keyboard.LEFT || e.keyCode==Keyboard.RIGHT 
 					|| e.keyCode===Keyboard.A || e.keyCode===Keyboard.D
 					|| e.keyCode===Keyboard.Q) {
-				gotoAndStop(currentLabel==="LIE"?"TRUTH":"LIE");
-				selectSound.play();
+				if(e.type===KeyboardEvent.KEY_DOWN) {
+					gotoAndStop(currentLabel==="LIE"?"TRUTH":"LIE");
+					selectSound.play();
+				}
 			} else if(e.keyCode===Keyboard.SPACE || e.keyCode===Keyboard.ENTER) {
-				choice = currentLabel;
-				MovieClip(parent).choice = currentLabel;
-				MovieClip(parent).play();
-				myStage.removeEventListener(KeyboardEvent.KEY_DOWN, onKey);			
+				if(e.type===KeyboardEvent.KEY_UP) {
+					choice = currentLabel;
+					MovieClip(parent).choice = currentLabel;
+					MovieClip(parent).play();
+					myStage.removeEventListener(KeyboardEvent.KEY_DOWN, onKey);			
+					myStage.removeEventListener(KeyboardEvent.KEY_UP, onKey);					
+				}
 			}
 		}
 		
 		private function offStage(e:Event):void {
 			myStage.removeEventListener(KeyboardEvent.KEY_DOWN, onKey);			
+			myStage.removeEventListener(KeyboardEvent.KEY_UP, onKey);			
 		}
 	}
 	
